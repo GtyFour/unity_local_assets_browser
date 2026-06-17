@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnityPackage 本地浏览器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7f9fc;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 24px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-right: auto;
+        }
+        header label {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        header label:hover {
+            background: #2563eb;
+        }
+        header input[type="file"] {
+            display: none;
+        }
+        .search-wrapper {
+            display: flex;
+            flex: 1 1 300px;
+            gap: 6px;
+            align-items: center;
+        }
+        #searchBox {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border 0.2s;
+            min-width: 150px;
+        }
+        #searchBox:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        #searchBtn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        #searchBtn:hover {
+            background: #2563eb;
+        }
+        #stats {
+            font-size: 14px;
+            color: #64748b;
+            white-space: nowrap;
+            min-width: 100px;
+            text-align: right;
+        }
+        #results {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .package-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .package-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.1s;
+            gap: 12px;
+        }
+        .package-header:hover {
+            background: #f8fafc;
+        }
+        .pkg-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .package-name {
+            font-weight: 600;
+            font-size: 16px;
+            word-break: break-word;
+        }
+        .package-path {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+            word-break: break-all;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .package-badge {
+            background: #e2e8f0;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .action-btn {
+            background: none;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #475569;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .action-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        .action-btn.copied {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+        .action-btn.finder {
+            border-color: #60a5fa;
+            color: #2563eb;
+        }
+        .action-btn.finder:hover {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        .action-btn.desc-folder {
+            border-color: #f59e0b;
+            color: #d97706;
+        }
+        .action-btn.desc-folder:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        .action-btn.desc {
+            border-color: #8b5cf6;
+            color: #7c3aed;
+        }
+        .action-btn.desc:hover {
+            background: #ede9fe;
+            border-color: #8b5cf6;
+        }
+        .package-detail {
+            padding: 0 20px 20px 20px;
+            display: none;
+            border-top: 1px solid #f1f5f9;
+        }
+        .package-detail.open {
+            display: block;
+        }
+        .detail-section {
+            margin-top: 16px;
+        }
+        .detail-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+        .readme-content {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+        }
+        .file-item {
+            word-break: break-all;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .file-item::before {
+            content: "📄 ";
+        }
+        .empty-msg {
+            color: #94a3b8;
+            font-style: italic;
+        }
+        .no-result {
+            text-align: center;
+            padding: 40px 0;
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .pagination button {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination select {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            background: white;
+        }
+        .pagination span {
+            font-size: 14px;
+            color: #475569;
+        }
+        .desc-files-area {
+            margin-top: 8px;
+            background: #f0fdf4;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+        }
+        .desc-file-item {
+            display: inline-block;
+            margin-right: 16px;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        .desc-file-item .file-type {
+            background: #dbeafe;
+            padding: 0 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 4px;
+            color: #1e40af;
+        }
+        .desc-file-item a {
+            color: #2563eb;
+            text-decoration: none;
+            cursor: pointer;
+            margin-left: 6px;
+            border-bottom: 1px dashed #2563eb;
+        }
+        .desc-file-item a:hover {
+            color: #1d4ed8;
+            border-bottom-style: solid;
+        }
+        .desc-preview {
+            display: none;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-top: 4px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            border: 1px solid #e2e8f0;
+        }
+        .desc-preview.open {
+            display: block;
+        }
+        @media (max-width: 640px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            header h1 {
+                margin-right: 0;
+            }
+            .search-wrapper {
+                flex-wrap: wrap;
+            }
+            #searchBox {
+                min-width: 100px;
+            }
+            .package-header {
+                flex-wrap: wrap;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .desc-file-item {
+                display: block;
+                margin-bottom: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📦 UnityPackage 本地浏览器</h1>
+        <input type="file" id="fileInput" accept=".json">
+        <label for="fileInput">📂 选择 JSON 索引</label>
+        <div class="search-wrapper">
+            <input type="search" id="searchBox" placeholder="🔍 输入关键词，按回车搜索">
+            <button id="searchBtn">搜索</button>
+        </div>
+        <span id="stats">未加载</span>
+    </header>
+    <div id="results"></div>
+    <div id="pagination" class="pagination" style="display:none;"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+    let packages = [];
+    let currentFiltered = [];
+    let currentPage = 1;
+    let pageSize = 36;
+    const pageSizeOptions = [18, 36, 72, 96];
+
+    const fileInput = document.getElementById('fileInput');
+    const searchBox = document.getElementById('searchBox');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsDiv = document.getElementById('results');
+    const statsSpan = document.getElementById('stats');
+    const paginationDiv = document.getElementById('pagination');
+    const toastEl = document.getElementById('toast');
+
+    let toastTimer = null;
+
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toastEl.classList.remove('show');
+        }, 2500);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getFolderPath(originalPath) {
+        if (!originalPath) return '';
+        const lastSlash = originalPath.lastIndexOf('/');
+        return lastSlash > 0 ? originalPath.substring(0, lastSlash) : originalPath;
+    }
+
+    function renderPage() {
+        const total = currentFiltered.length;
+        if (total === 0) {
+            resultsDiv.innerHTML = `<div class="no-result">😕 没有找到匹配的包</div>`;
+            paginationDiv.style.display = 'none';
+            statsSpan.textContent = '🔍 0 个结果';
+            return;
+        }
+
+        const totalPages = Math.ceil(total / pageSize);
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = Math.min(start + pageSize, total);
+        const pageData = currentFiltered.slice(start, end);
+
+        let html = '';
+        pageData.forEach((pkg, idx) => {
+            const cardId = 'pkg-' + idx + '-' + currentPage;
+            const fileCount = pkg.files ? pkg.files.length : 0;
+            const folderPath = getFolderPath(pkg.originalPath);
+            const describeFiles = pkg.describeFiles || [];
+            const hasDescribe = describeFiles.length > 0;
+            const baseDir = pkg.baseDir || '';
+            const descFolderPath = baseDir ? baseDir + '/describe_files' : '';
+
+            html += `
+                <div class="package-card">
+                    <div class="package-header" onclick="toggleDetail('${cardId}')">
+                        <div class="pkg-info">
+                            <div class="package-name">${escapeHtml(pkg.packageName || '未命名')}</div>
+                            <div class="package-path">${escapeHtml(pkg.originalPath || '')}</div>
+                        </div>
+                        <div class="header-actions" onclick="event.stopPropagation();">
+                            <span class="package-badge">📄 ${fileCount} 个文件</span>
+                            <button class="action-btn finder" data-folder="${escapeHtml(folderPath)}" onclick="revealInFinder(this)">📁 包路径</button>
+                            <button class="action-btn" data-folder="${escapeHtml(folderPath)}" onclick="copyFolderPath(this)">📋 复制路径</button>
+                            ${descFolderPath ? `<button class="action-btn desc-folder" data-folder="${escapeHtml(descFolderPath)}" onclick="openDescribeFolder(this)">📄 描述文件</button>` : ''}
+                            ${hasDescribe ? `<button class="action-btn desc" onclick="toggleDescribe('${cardId}')">📄 说明文件 (${describeFiles.length})</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="package-detail" id="${cardId}">
+                        ${buildDetail(pkg, cardId)}
+                    </div>
+                </div>
+            `;
+        });
+        resultsDiv.innerHTML = html;
+        renderPagination(totalPages);
+        statsSpan.textContent = `📦 显示 ${start+1}-${end} / 共 ${total} 个包（总计 ${packages.length} 个）`;
+    }
+
+    function buildDetail(pkg, cardId) {
+        let html = '';
+        if (pkg.readme && pkg.readme.trim()) {
+            html += `
+                <div class="detail-section">
+                    <h3>📖 README</h3>
+                    <div class="readme-content">${escapeHtml(pkg.readme)}</div>
+                </div>
+            `;
+        }
+        if (pkg.files && pkg.files.length > 0) {
+            html += `
+                <div class="detail-section">
+                    <h3>📁 导入路径（${pkg.files.length} 个）</h3>
+                    <div class="file-list">
+                        ${pkg.files.map(f => `<span class="file-item">${escapeHtml(f)}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="detail-section">
+                    <h3>📁 导入路径</h3>
+                    <div class="file-list"><span class="empty-msg">无文件列表</span></div>
+                </div>
+            `;
+        }
+        const describeFiles = pkg.describeFiles || [];
+        const describeContents = pkg.describeContents || {};
+        if (describeFiles.length > 0) {
+            html += `
+                <div class="detail-section">
+                    <h3>📄 提取的说明文件</h3>
+                    <div id="desc-area-${cardId}" class="desc-files-area" style="display:none;">
+            `;
+            describeFiles.forEach(fname => {
+                const content = describeContents[fname] || null;
+                const hasPreview = content && content.trim().length > 0;
+                const previewId = 'preview-' + cardId + '-' + fname.replace(/[^a-zA-Z0-9]/g, '_');
+                html += `<div class="desc-file-item">
+                            📄 ${escapeHtml(fname)}
+                            ${hasPreview ? `<a href="javascript:void(0)" onclick="togglePreview('${previewId}')">[预览]</a>` : ''}
+                            <span class="file-type">${fname.split('.').pop().toUpperCase()}</span>
+                        </div>`;
+                if (hasPreview) {
+                    html += `<div id="${previewId}" class="desc-preview">${escapeHtml(content)}</div>`;
+                }
+            });
+            html += `
+                        <div style="margin-top:8px;font-size:13px;color:#64748b;">💡 说明文件已解压至包目录下的 describe_files 文件夹中。</div>
+                    </div>
+                </div>
+            `;
+        }
+        return html;
+    }
+
+    function toggleDetail(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('open');
+    }
+
+    function toggleDescribe(cardId) {
+        const area = document.getElementById('desc-area-' + cardId);
+        if (area) {
+            const isHidden = area.style.display === 'none';
+            area.style.display = isHidden ? 'block' : 'none';
+            const card = area.closest('.package-card');
+            if (card) {
+                const btn = card.querySelector('.action-btn.desc');
+                if (btn) {
+                    const count = area.querySelectorAll('.desc-file-item').length;
+                    btn.textContent = isHidden ? `📄 隐藏说明文件 (${count})` : `📄 说明文件 (${count})`;
+                }
+            }
+        }
+    }
+
+    function togglePreview(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('open');
+            const parent = el.parentElement;
+            const link = parent.querySelector('a');
+            if (link) {
+                link.textContent = el.classList.contains('open') ? '[收起]' : '[预览]';
+            }
+        }
+    }
+
+    function revealInFinder(btn) {
+        const folderPath = btn.getAttribute('data-folder');
+        if (!folderPath || folderPath.trim() === '') {
+            showToast('❌ 没有可打开的路径');
+            return;
+        }
+        const url = 'file://' + folderPath;
+        const win = window.open(url, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            navigator.clipboard.writeText(folderPath).then(() => {
+                showToast('⚠️ 浏览器阻止了打开 Finder，已复制路径，请用 ⌘+Shift+G 跳转');
+            }).catch(() => {
+                showToast('⚠️ 无法打开 Finder，请手动复制路径: ' + folderPath);
+            });
+        } else {
+            btn.textContent = '✅ 已打开';
+            setTimeout(() => { btn.textContent = '📁 包路径'; }, 1500);
+        }
+    }
+
+    function copyFolderPath(btn) {
+        const folderPath = btn.getAttribute('data-folder');
+        if (!folderPath || folderPath.trim() === '') {
+            showToast('❌ 没有可复制的路径');
+            return;
+        }
+        navigator.clipboard.writeText(folderPath).then(() => {
+            showToast('✅ 路径已复制: ' + folderPath);
+            btn.classList.add('copied');
+            setTimeout(() => btn.classList.remove('copied'), 2000);
+        }).catch(() => {
+            showToast('⚠️ 复制失败，请手动复制: ' + folderPath);
+        });
+    }
+
+    function openDescribeFolder(btn) {
+        const folderPath = btn.getAttribute('data-folder');
+        if (!folderPath || folderPath.trim() === '') {
+            showToast('❌ 没有可打开的路径');
+            return;
+        }
+        const url = 'file://' + folderPath;
+        const win = window.open(url, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+            navigator.clipboard.writeText(folderPath).then(() => {
+                showToast('⚠️ 浏览器阻止了打开 Finder，已复制描述文件目录路径，请用 ⌘+Shift+G 跳转');
+            }).catch(() => {
+                showToast('⚠️ 无法打开 Finder，请手动复制路径: ' + folderPath);
+            });
+        } else {
+            btn.textContent = '✅ 已打开';
+            setTimeout(() => { btn.textContent = '📄 描述文件'; }, 1500);
+        }
+    }
+
+    function renderPagination(totalPages) {
+        if (totalPages <= 1) {
+            paginationDiv.style.display = 'none';
+            return;
+        }
+        paginationDiv.style.display = 'flex';
+        let html = '';
+        html += `<button onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>◀ 上一页</button>`;
+        html += `<span>第 ${currentPage} / ${totalPages} 页</span>`;
+        html += `<button onclick="goPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页 ▶</button>`;
+        html += `<span>每页</span><select id="pageSizeSelect" onchange="changePageSize(this.value)">`;
+        pageSizeOptions.forEach(opt => {
+            html += `<option value="${opt}" ${opt === pageSize ? 'selected' : ''}>${opt}</option>`;
+        });
+        html += `</select><span>条</span>`;
+        paginationDiv.innerHTML = html;
+    }
+
+    function goPage(page) {
+        const total = currentFiltered.length;
+        const totalPages = Math.ceil(total / pageSize);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function changePageSize(val) {
+        pageSize = parseInt(val);
+        currentPage = 1;
+        renderPage();
+    }
+
+    function performSearch() {
+        const keyword = searchBox.value.trim();
+        if (!keyword) {
+            currentFiltered = packages;
+        } else {
+            const lowerKeyword = keyword.toLowerCase();
+            currentFiltered = packages.filter(pkg => {
+                const searchable = [
+                    pkg.packageName,
+                    pkg.originalPath,
+                    pkg.readme,
+                    ...pkg.files
+                ].join(' ').toLowerCase();
+                return searchable.includes(lowerKeyword);
+            });
+        }
+        currentPage = 1;
+        renderPage();
+    }
+
+    searchBox.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+    searchBtn.addEventListener('click', performSearch);
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                packages = JSON.parse(ev.target.result);
+                if (!Array.isArray(packages)) throw new Error('数据格式错误');
+                currentFiltered = packages;
+                currentPage = 1;
+                statsSpan.textContent = `✅ 共 ${packages.length} 个包`;
+                searchBox.value = '';
+                renderPage();
+            } catch (err) {
+                alert('加载失败：' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        fileInput.value = '';
+    });
+
+    resultsDiv.innerHTML = `<div class="no-result">👆 请点击上方按钮选择 JSON 索引文件</div>`;
+    paginationDiv.style.display = 'none';
+</script>
+</body>
+</html>
