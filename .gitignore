@@ -2,6 +2,13 @@
 .DS_Store
 .DS_Store?
 
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+Desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
 # Python
 __pycache__/
 *.py[cod]

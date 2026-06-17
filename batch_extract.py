@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import os
+import sys
 import subprocess
 from pathlib import Path
 
 # ===== 请在这里修改你的路径 =====
-TARGET_DIR = "/Users/你的用户名/Library/Unity/Asset Store-5.x"   # 你的 Unity 缓存目录
-OUTPUT_DIR = "/Users/你的用户名/Downloads/UnityPackage_Manifests" # 输出目录（可自定义）
+# Windows 默认路径（请将 "你的用户名" 替换为你的实际 Windows 用户名）
+TARGET_DIR = r"C:\Users\你的用户名\AppData\Roaming\Unity\Asset Store-5.x"
+OUTPUT_DIR = r"C:\Users\你的用户名\Downloads\UnityPackage_Manifests"
 # ================================
 
 def main():
@@ -18,7 +20,7 @@ def main():
 
     for idx, pkg in enumerate(pkg_files, 1):
         print(f"[{idx}/{len(pkg_files)}] 处理: {pkg.name}")
-        cmd = ['python3', 'extract_package_info.py', str(pkg), '-o', str(out)]
+        cmd = [sys.executable, 'extract_package_info.py', str(pkg), '-o', str(out)]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             print(f"   ❌ 失败: {result.stderr}")

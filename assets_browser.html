@@ -484,7 +484,7 @@
                         </div>
                         <div class="header-actions" onclick="event.stopPropagation();">
                             <span class="package-badge">📄 ${fileCount} 个文件</span>
-                            <button class="action-btn finder" data-folder="${escapeHtml(folderPath)}" onclick="revealInFinder(this)">📁 包路径</button>
+                            <button class="action-btn explorer" data-folder="${escapeHtml(folderPath)}" onclick="revealInExplorer(this)">📁 包路径</button>
                             <button class="action-btn" data-folder="${escapeHtml(folderPath)}" onclick="copyFolderPath(this)">📋 复制路径</button>
                             ${descFolderPath ? `<button class="action-btn desc-folder" data-folder="${escapeHtml(descFolderPath)}" onclick="openDescribeFolder(this)">📄 描述文件</button>` : ''}
                             ${hasDescribe ? `<button class="action-btn desc" onclick="toggleDescribe('${cardId}')">📄 说明文件 (${describeFiles.length})</button>` : ''}
@@ -591,7 +591,7 @@
         }
     }
 
-    function revealInFinder(btn) {
+    function revealInExplorer(btn) {
         const folderPath = btn.getAttribute('data-folder');
         if (!folderPath || folderPath.trim() === '') {
             showToast('❌ 没有可打开的路径');
@@ -601,9 +601,9 @@
         const win = window.open(url, '_blank');
         if (!win || win.closed || typeof win.closed === 'undefined') {
             navigator.clipboard.writeText(folderPath).then(() => {
-                showToast('⚠️ 浏览器阻止了打开 Finder，已复制路径，请用 ⌘+Shift+G 跳转');
+                showToast('⚠️ 浏览器阻止了打开资源管理器，已复制路径，请用 Win+E 手动打开');
             }).catch(() => {
-                showToast('⚠️ 无法打开 Finder，请手动复制路径: ' + folderPath);
+                showToast('⚠️ 无法打开资源管理器，请手动复制路径: ' + folderPath);
             });
         } else {
             btn.textContent = '✅ 已打开';
@@ -636,9 +636,9 @@
         const win = window.open(url, '_blank');
         if (!win || win.closed || typeof win.closed === 'undefined') {
             navigator.clipboard.writeText(folderPath).then(() => {
-                showToast('⚠️ 浏览器阻止了打开 Finder，已复制描述文件目录路径，请用 ⌘+Shift+G 跳转');
+                showToast('⚠️ 浏览器阻止了打开资源管理器，已复制描述文件目录路径，请用 Win+E 手动打开');
             }).catch(() => {
-                showToast('⚠️ 无法打开 Finder，请手动复制路径: ' + folderPath);
+                showToast('⚠️ 无法打开资源管理器，请手动复制路径: ' + folderPath);
             });
         } else {
             btn.textContent = '✅ 已打开';
